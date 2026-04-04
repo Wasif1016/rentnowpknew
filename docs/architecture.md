@@ -1,5 +1,7 @@
 # RentNowPk — Full Platform Flow
 
+Implementation map for current App Router segments: [routes.md](./routes.md).
+
 ---
 
 ## 1. Public Layer

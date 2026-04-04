@@ -24,7 +24,7 @@ async function VendorLayoutInner({ children }: { children: React.ReactNode }) {
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <nav className="p-4 space-y-2">
-          <a href="/vendor/dashboard" className="block px-3 py-2 rounded-md hover:bg-accent">
+          <a href="/vendor" className="block px-3 py-2 rounded-md hover:bg-accent">
             Dashboard
           </a>
           <a href="/vendor/vehicles" className="block px-3 py-2 rounded-md hover:bg-accent">

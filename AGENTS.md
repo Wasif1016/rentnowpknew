@@ -13,5 +13,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Auth helper is getRequiredUser() in src/lib/auth/session.ts
 - cacheComponents: true is enabled — use "use cache" directive, NOT unstable_cache
 - proxy.ts replaces middleware.ts — never create middleware.ts; it calls `updateSession()` from `src/lib/supabase/middleware.ts` (no route auth checks in proxy — use `getRequiredUser()` in layouts)
+- App routes: see `docs/routes.md` (`(public)/`, `customer/`, `vendor/`, `admin/`)
 - params and searchParams are always Promises — always await them
 - Money fields use Decimal strings in DB — parse with parseFloat() for display only

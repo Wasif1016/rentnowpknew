@@ -116,18 +116,21 @@ export default nextConfig;
 ```
 src/
 ├── app/
-│   ├── (marketing)/        # Public pages — no auth required
+│   ├── (public)/           # Marketing — URLs: /, /search, /for-vendors
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── search/
+│   │   └── for-vendors/
+│   ├── customer/           # CUSTOMER — URLs: /customer, /customer/...
 │   │   ├── layout.tsx
 │   │   └── page.tsx
-│   ├── (customer)/         # Customer app — auth required, role = CUSTOMER
-│   │   ├── layout.tsx      # Auth guard here
-│   │   └── dashboard/
-│   ├── (vendor)/           # Vendor app — auth required, role = VENDOR
-│   │   ├── layout.tsx      # Auth guard here
-│   │   └── vendor/         # e.g. /vendor/dashboard, /vendor/vehicles/add
-│   └── (admin)/            # Admin — auth required, role = ADMIN
-│       ├── layout.tsx
-│       └── page.tsx
+│   ├── vendor/             # VENDOR — URLs: /vendor, /vendor/vehicles, ...
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── vehicles/
+│   ├── admin/              # ADMIN — URLs: /admin, ...
+│   │   └── layout.tsx
+│   └── api/
 ├── lib/
 │   ├── db/
 │   │   ├── index.ts        # Drizzle client
@@ -238,8 +241,8 @@ import { eq } from "drizzle-orm";
 type Role = "CUSTOMER" | "VENDOR" | "ADMIN";
 
 const ROLE_HOMES: Record<Role, string> = {
-  CUSTOMER: "/dashboard",
-  VENDOR: "/vendor/dashboard",
+  CUSTOMER: "/customer",
+  VENDOR: "/vendor",
   ADMIN: "/admin",
 };
 
@@ -291,7 +294,7 @@ export async function getOptionalUser() {
 ### Route Group Auth Pattern
 
 ```tsx
-// src/app/(vendor)/layout.tsx
+// src/app/vendor/layout.tsx
 // One auth check gates the ENTIRE vendor section
 import { getRequiredUser } from "@/lib/auth/session";
 
@@ -310,7 +313,7 @@ export default async function VendorLayout({
   );
 }
 
-// src/app/(vendor)/dashboard/page.tsx
+// src/app/vendor/page.tsx
 // No separate auth check needed — layout already did it
 export default async function VendorDashboard() {
   const user = await getRequiredUser("VENDOR"); // fast — React deduplicates the call
@@ -466,7 +469,7 @@ export async function getUnreadNotificationCount(userId: string) {
 ### Mixing cached and dynamic content (PPR)
 
 ```tsx
-// app/(customer)/dashboard/page.tsx
+// app/customer/page.tsx
 import { Suspense } from "react";
 
 // No "use cache" at page level — page reads session (dynamic)
@@ -826,7 +829,7 @@ export async function loginAction(formData: FormData) {
   "use server";
   try {
     await signIn(formData);
-    redirect("/dashboard"); // this throw is caught below and silently swallowed
+    redirect("/customer"); // example: use role home — this throw is caught below and silently swallowed
   } catch (error) {
     return { error: "Login failed" }; // redirect never happens
   }
@@ -839,7 +842,7 @@ export async function loginAction(formData: FormData) {
 
   try {
     await signIn(formData);
-    destination = "/dashboard";
+    destination = "/customer";
   } catch (error) {
     return { error: "Login failed" };
   }

@@ -16,7 +16,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The home page is `src/app/(public)/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
@@ -38,15 +38,26 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## RentNowPk
 
-Stack: Next.js 16, Supabase Auth, Drizzle ORM, Tailwind, shadcn/ui. Product flows live in `docs/architecture.md` and `docs/flow.md`.
+Stack: Next.js 16, Supabase Auth, Drizzle ORM, Tailwind, shadcn/ui. Product flows live in `docs/architecture.md` and `docs/flow.md`. **Route map:** `docs/routes.md`.
 
-Copy `.env.example` to `.env.local` and set `DATABASE_URL`, Supabase keys, and email sender.
+Copy `.env.example` to `.env.local` and set `DATABASE_URL` (and `DIRECT_URL` for migrations), Supabase keys, and email sender.
 
-Apply database migrations (fresh Supabase DB):
+### Database (Drizzle + Supabase Postgres)
+
+From the project root, with `DATABASE_URL` set (Supabase **Session pooler** URI is fine for app code; use **direct** `5432` for `drizzle-kit migrate` if the pooler rejects DDL):
 
 ```bash
+# Apply existing SQL migrations in ./drizzle → database (recommended for production)
 pnpm exec drizzle-kit migrate
+
+# Or push schema.ts to DB without new migration files (handy in dev only)
+pnpm exec drizzle-kit push
+
+# After editing schema.ts — generate a new migration SQL file
+pnpm exec drizzle-kit generate
 ```
+
+Scripts: `pnpm run db:migrate`, `pnpm run db:push`, `pnpm run db:generate` (see `package.json`).
 
 ### Inngest (local dev, optional)
 

@@ -24,13 +24,13 @@ async function CustomerLayoutInner({ children }: { children: React.ReactNode }) 
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <nav className="p-4 space-y-2">
-          <a href="/dashboard" className="block px-3 py-2 rounded-md hover:bg-accent">
+          <a href="/customer" className="block px-3 py-2 rounded-md hover:bg-accent">
             Dashboard
           </a>
-          <a href="/dashboard/bookings" className="block px-3 py-2 rounded-md hover:bg-accent">
+          <a href="/customer/bookings" className="block px-3 py-2 rounded-md hover:bg-accent">
             Bookings
           </a>
-          <a href="/dashboard/settings" className="block px-3 py-2 rounded-md hover:bg-accent">
+          <a href="/customer/settings" className="block px-3 py-2 rounded-md hover:bg-accent">
             Settings
           </a>
         </nav>

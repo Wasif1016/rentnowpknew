@@ -7,8 +7,8 @@ import { eq } from 'drizzle-orm'
 type Role = 'CUSTOMER' | 'VENDOR' | 'ADMIN'
 
 const ROLE_HOMES: Record<Role, string> = {
-  CUSTOMER: '/dashboard',
-  VENDOR: '/vendor/dashboard',
+  CUSTOMER: '/customer',
+  VENDOR: '/vendor',
   ADMIN: '/admin',
 }
 

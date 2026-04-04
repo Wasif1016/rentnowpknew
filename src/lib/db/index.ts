@@ -14,6 +14,9 @@ const client =
   globalForDb.postgres ??
   postgres(connectionString, {
     max: 1, // Connection pool size
+    // Required for Supabase pooler (PgBouncer, port 6543 / transaction mode):
+    // prepared statements are not supported across pooled connections.
+    prepare: false,
   });
 
 if (process.env.NODE_ENV !== "production") {

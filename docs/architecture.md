@@ -98,10 +98,14 @@ System actions on submission:
 
 ### 3.2 Verification (KYC)
 
-Vendor submits:
-1. CNIC number
+Vendor submits via the in-dashboard wizard (multi-step dialog; **images are uploaded to Cloudinary only on final submit** — see [`docs/env.md`](./env.md) for `CLOUDINARY_*` variables; storage path pattern `rentnowpk/vendor-verification/{vendorProfileId}/`):
+
+1. CNIC number (13 digits)
 2. Front and back CNIC images
-3. Own photo (selfie)
+3. Profile photo (selfie) — also stored as the user’s account avatar (`users.avatar_url`)
+4. Business logo — `vendor_profiles.business_logo_url`
+
+Submission sets `vendor_profiles.verification_submitted_at`. The vendor dashboard shows a **banner**: before submission, a CTA to verify; after submission while still pending, a message that the request is **under review (~24h)**; if **rejected**, the admin’s `status_note` is shown with a **resubmit** path.
 
 - Vehicles are listed and visible in the vendor dashboard but hidden from the public until admin approves
 - Admin approves or rejects with a short note for resubmission

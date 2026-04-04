@@ -149,6 +149,12 @@ export const vendorProfiles = pgTable(
     cnicFrontUrl: text("cnic_front_url"),
     cnicBackUrl: text("cnic_back_url"),
     selfieUrl: text("selfie_url"),
+    businessLogoUrl: text("business_logo_url"),
+
+    /** Set when vendor completes the verification wizard; null means not yet submitted. */
+    verificationSubmittedAt: timestamp("verification_submitted_at", {
+      withTimezone: true,
+    }),
 
     verificationStatus: vendorVerificationEnum("verification_status")
       .notNull()

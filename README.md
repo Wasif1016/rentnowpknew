@@ -36,10 +36,20 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 
+## RentNowPk
 
+Stack: Next.js 16, Supabase Auth, Drizzle ORM, Tailwind, shadcn/ui. Product flows live in `docs/architecture.md` and `docs/flow.md`.
+
+Copy `.env.example` to `.env.local` and set `DATABASE_URL`, Supabase keys, and email sender.
+
+Apply database migrations (fresh Supabase DB):
+
+```bash
+pnpm exec drizzle-kit migrate
+```
+
+### Inngest (local dev, optional)
+
+```bash
 pnpm dlx inngest-cli@latest dev -u http://localhost:3000/api/inngest
-
-
-
-The current project is complelt copied form other project called pain pro. But since techstack was same for nw project renowpk. So I simple copy the project adn renamed to rentnowpk. The pain pro project was not like completed it was just seted up to get started.Now Now we have to do this:
-Turn The who setup to the  
+```

@@ -1,8 +1,9 @@
 # Next.js 16 — Complete AI Coding Guide
 
-> Stack: Next.js 16.2+ · Supabase · Drizzle · Tailwind · shadcn/ui
-> This file is your source of truth. Read it before writing any Next.js code.
-> AI models were trained on older Next.js — this corrects the outdated patterns they default to.
+> Stack: Next.js 16.2+ · Supabase · Drizzle · Tailwind · shadcn/ui  
+> **Project: RentNowPk** — domain model, routes, and tables: `docs/architecture.md`, `src/lib/db/schema.ts`.  
+> Some narrative examples below still use generic “job/lead” wording as teaching patterns; map them to **bookings / vendors / vehicles** in this codebase.  
+> This file is your source of truth for Next.js patterns. Read it before writing app code.
 
 ---
 
@@ -88,13 +89,13 @@ const nextConfig: NextConfig = {
       revalidate: 60 * 60 * 24, // recheck once/day
       expire: 60 * 60 * 24 * 30, // max 30 days
     },
-    // Painter profiles, city pages, reviews — updates occasionally
+    // Vendor profiles, vehicles, city pages — updates occasionally
     standard: {
       stale: 60, // 1 min client
       revalidate: 300, // recheck every 5 min
       expire: 3600, // max 1 hour
     },
-    // Lead counts, active job statuses — updates frequently
+    // Bookings, search results — updates frequently
     live: {
       stale: 10,
       revalidate: 30,
@@ -118,12 +119,12 @@ src/
 │   ├── (marketing)/        # Public pages — no auth required
 │   │   ├── layout.tsx
 │   │   └── page.tsx
-│   ├── (homeowner)/        # Homeowner app — auth required, role = HOMEOWNER
+│   ├── (customer)/         # Customer app — auth required, role = CUSTOMER
 │   │   ├── layout.tsx      # Auth guard here
 │   │   └── dashboard/
-│   ├── (painter)/          # Painter app — auth required, role = PAINTER
+│   ├── (vendor)/           # Vendor app — auth required, role = VENDOR
 │   │   ├── layout.tsx      # Auth guard here
-│   │   └── dashboard/
+│   │   └── vendor/         # e.g. /vendor/dashboard, /vendor/vehicles/add
 │   └── (admin)/            # Admin — auth required, role = ADMIN
 │       ├── layout.tsx
 │       └── page.tsx
@@ -137,13 +138,13 @@ src/
 │   ├── auth/
 │   │   └── session.ts      # getRequiredUser(), getOptionalUser()
 │   └── actions/            # ALL Server Actions live here — never inline them
-│       ├── quote.ts
-│       ├── job.ts
-│       └── payment.ts
+│       ├── auth.ts
+│       ├── booking.ts
+│       └── vehicle.ts
 ├── components/
 │   ├── ui/                 # shadcn — never edit these
-│   ├── painter/
-│   ├── homeowner/
+│   ├── vendor/
+│   ├── customer/
 │   └── admin/
 └── proxy.ts                # Auth + routing — NOT middleware.ts
 ```
@@ -152,64 +153,38 @@ src/
 
 ## 2. proxy.ts — REPLACES MIDDLEWARE.TS
 
-`middleware.ts` is deprecated in Next.js 16. Rename it to `proxy.ts` and rename the export to `proxy`.
+`middleware.ts` is deprecated in Next.js 16. Use `proxy.ts` with a named export `proxy` (Node.js runtime — not Edge).
 
-**Rule: proxy.ts only checks if a session cookie EXISTS. No DB calls. No JWT verification. Keep it under 20ms.**
+**Rule: do not implement route protection or “is logged in?” redirects in `proxy.ts`.** That belongs in layouts via `getRequiredUser()`. In `proxy`, only skip static assets, then delegate to Supabase’s **`updateSession()`** so cookies stay fresh (`getUser()` validates with the Auth server — see [Supabase Next.js guide](https://supabase.com/docs/guides/auth/server-side/nextjs)).
 
 ```ts
 // src/proxy.ts
 import { type NextRequest, NextResponse } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-const PUBLIC_PATHS = [
-  "/",
-  "/for-painters",
-  "/how-it-works",
-  "/pricing",
-  "/blog",
-  "/login",
-  "/signup",
-  "/join",
-  "/trust",
-  "/about",
-  "/contact",
-  "/painters",
-  "/verify-email",
-];
-
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Static assets — always allow
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.match(/\.(png|jpg|svg|ico|css|js|woff2?)$/)
-  )
+  ) {
     return NextResponse.next();
-
-  // Webhooks — always allow (Stripe, etc. have no session cookie)
-  if (pathname.startsWith("/api/webhooks")) return NextResponse.next();
-
-  // Public paths — allow
-  const isPublic = PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
-  if (isPublic) return NextResponse.next();
-
-  // Protected — check cookie exists only. Layouts do real auth.
-  const session = request.cookies.get("sb-auth-token");
-  if (!session) {
-    const url = new URL("/login", request.url);
-    url.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(url);
   }
-
-  return NextResponse.next();
+  return updateSession(request);
 }
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
+```
+
+```ts
+// src/lib/supabase/middleware.ts — session refresh only (no redirects)
+export async function updateSession(request: NextRequest): Promise<NextResponse> {
+  // createServerClient + cookies getAll/setAll + await supabase.auth.getUser()
+  // …
+}
 ```
 
 ---
@@ -260,11 +235,11 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-type Role = "HOMEOWNER" | "PAINTER" | "ADMIN";
+type Role = "CUSTOMER" | "VENDOR" | "ADMIN";
 
 const ROLE_HOMES: Record<Role, string> = {
-  HOMEOWNER: "/dashboard",
-  PAINTER: "/painter/dashboard",
+  CUSTOMER: "/dashboard",
+  VENDOR: "/vendor/dashboard",
   ADMIN: "/admin",
 };
 
@@ -316,29 +291,29 @@ export async function getOptionalUser() {
 ### Route Group Auth Pattern
 
 ```tsx
-// src/app/(painter)/layout.tsx
-// One auth check gates the ENTIRE painter section
+// src/app/(vendor)/layout.tsx
+// One auth check gates the ENTIRE vendor section
 import { getRequiredUser } from "@/lib/auth/session";
 
-export default async function PainterLayout({
+export default async function VendorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   // Redirects if not logged in OR wrong role — never reaches children
-  const user = await getRequiredUser("PAINTER");
+  const user = await getRequiredUser("VENDOR");
   return (
     <div className="flex h-screen">
-      <PainterSidebar user={user} />
+      <VendorSidebar user={user} />
       <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 }
 
-// src/app/(painter)/dashboard/page.tsx
+// src/app/(vendor)/dashboard/page.tsx
 // No separate auth check needed — layout already did it
-export default async function PainterDashboard() {
-  const user = await getRequiredUser("PAINTER"); // fast — React deduplicates the call
+export default async function VendorDashboard() {
+  const user = await getRequiredUser("VENDOR"); // fast — React deduplicates the call
   const [leads, jobs] = await Promise.all([
     getLeads(user.id),
     getJobs(user.id),
@@ -419,59 +394,55 @@ async function CachedForm({ action }: { action: () => Promise<void> }) {
 ### Caching data functions
 
 ```ts
-// src/lib/data/painter.ts
+// src/lib/data/vendor.ts
 import { cacheLife, cacheTag } from "next/cache";
 
-// Public painter profile — safe to cache, same for all users
-export async function getPublicPainterProfile(painterId: string) {
+// Public vendor profile — safe to cache, same for all users
+export async function getPublicVendorProfile(vendorId: string) {
   "use cache";
   cacheLife("standard");
-  cacheTag(`painter-profile-${painterId}`);
+  cacheTag(`vendor-profile-${vendorId}`);
 
   const [profile] = await db
     .select()
-    .from(painterProfiles)
-    .where(eq(painterProfiles.id, painterId))
+    .from(vendorProfiles)
+    .where(eq(vendorProfiles.id, vendorId))
     .limit(1);
 
   return profile ?? null;
 }
 
 // City SEO page — cache aggressively
-export async function getPaintersInCity(city: string, state: string) {
+export async function getVendorsInCity(city: string, state: string) {
   "use cache";
   cacheLife("hours");
-  cacheTag(`painters-city-${city}-${state}`);
+  cacheTag(`vendors-city-${city}-${state}`);
 
   return db
     .select()
-    .from(painterProfiles)
+    .from(vendorProfiles)
     .where(
       and(
-        eq(painterProfiles.status, "ACTIVE"),
-        eq(painterProfiles.primaryCity, city)
+        eq(vendorProfiles.verificationStatus, "APPROVED")
+        // In app: also filter by city via vehicles / vehicle_cities
       )
     );
 }
 
 // Layout data — cache so layout doesn't hit DB on every navigation
-export async function getPainterLayoutData(painterId: string) {
+export async function getVendorLayoutData(vendorId: string) {
   "use cache";
   cacheLife("standard");
-  cacheTag(`painter-layout-${painterId}`);
+  cacheTag(`vendor-layout-${vendorId}`);
 
   return db
     .select({
-      id: painterProfiles.id,
-      businessName: painterProfiles.businessName,
-      avatarUrl: painterProfiles.avatarUrl,
-      subscriptionStatus: subscriptions.status,
-      leadsUsedThisCycle: subscriptions.leadsUsedThisCycle,
-      monthlyLeadCap: subscriptions.monthlyLeadCap,
+      id: vendorProfiles.id,
+      businessName: vendorProfiles.businessName,
+      whatsappPhone: vendorProfiles.whatsappPhone,
     })
-    .from(painterProfiles)
-    .leftJoin(subscriptions, eq(subscriptions.painterId, painterProfiles.id))
-    .where(eq(painterProfiles.id, painterId))
+    .from(vendorProfiles)
+    .where(eq(vendorProfiles.id, vendorId))
     .limit(1);
 }
 
@@ -495,12 +466,12 @@ export async function getUnreadNotificationCount(userId: string) {
 ### Mixing cached and dynamic content (PPR)
 
 ```tsx
-// app/(homeowner)/dashboard/page.tsx
+// app/(customer)/dashboard/page.tsx
 import { Suspense } from "react";
 
 // No "use cache" at page level — page reads session (dynamic)
-export default async function HomeownerDashboard() {
-  const user = await getRequiredUser("HOMEOWNER");
+export default async function CustomerDashboard() {
+  const user = await getRequiredUser("CUSTOMER");
 
   return (
     <div>
@@ -510,12 +481,12 @@ export default async function HomeownerDashboard() {
       </Suspense>
 
       {/* DYNAMIC — streams in, user-specific */}
-      <Suspense fallback={<ProjectsSkeleton />}>
-        <ActiveProjects homeownerId={user.id} />
+      <Suspense fallback={<BookingsSkeleton />}>
+        <ActiveBookings customerUserId={user.id} />
       </Suspense>
 
       <Suspense fallback={<QuotesSkeleton />}>
-        <RecentQuotes homeownerId={user.id} />
+        <RecentQuotes customerUserId={user.id} />
       </Suspense>
     </div>
   );
@@ -528,24 +499,17 @@ async function CachedHowItWorksSection() {
   return <HowItWorksUI />; // no DB call — pure static content
 }
 
-async function ActiveProjects({ homeownerId }: { homeownerId: string }) {
-  // No cache — always fresh
-  const projects = await db
+async function ActiveBookings({ customerUserId }: { customerUserId: string }) {
+  const rows = await db
     .select()
-    .from(projectsTable)
+    .from(bookings)
     .where(
       and(
-        eq(projectsTable.homeownerId, homeownerId),
-        inArray(projectsTable.status, [
-          "OPEN",
-          "MATCHING",
-          "QUOTING",
-          "HIRED",
-          "IN_PROGRESS",
-        ])
+        eq(bookings.customerUserId, customerUserId),
+        inArray(bookings.status, ["PENDING", "CONFIRMED", "COMPLETED"])
       )
     );
-  return <ProjectList projects={projects} />;
+  return <BookingList bookings={rows} />;
 }
 ```
 
@@ -554,30 +518,30 @@ async function ActiveProjects({ homeownerId }: { homeownerId: string }) {
 ```ts
 // updateTag() — use after Server Actions triggered by users
 // User sees their own change immediately (read-your-writes)
-export async function updatePainterProfile(
-  painterId: string,
+export async function updateVendorProfile(
+  vendorId: string,
   data: UpdateInput
 ) {
   "use server";
-  const user = await getRequiredUser("PAINTER");
+  const user = await getRequiredUser("VENDOR");
   await db
-    .update(painterProfiles)
+    .update(vendorProfiles)
     .set(data)
-    .where(eq(painterProfiles.id, painterId));
+    .where(eq(vendorProfiles.id, vendorId));
 
-  updateTag(`painter-profile-${painterId}`); // user sees change NOW
-  updateTag(`painter-layout-${painterId}`);
+  updateTag(`vendor-profile-${vendorId}`); // user sees change NOW
+  updateTag(`vendor-layout-${vendorId}`);
   if (data.primaryCity)
-    updateTag(`painters-city-${data.primaryCity}-${data.primaryState}`);
+    updateTag(`vendors-city-${data.primaryCity}-${data.primaryState}`);
 }
 
 // revalidateTag() — use in background jobs, webhooks, admin actions
 // SWR: old content served until revalidation completes
 export async function stripeWebhookHandler(event: Stripe.Event) {
   if (event.type === "account.updated") {
-    const painterId = event.data.object.metadata.painterId;
-    revalidateTag(`painter-profile-${painterId}`, "max"); // background — SWR ok
-    revalidateTag(`painter-layout-${painterId}`, "max");
+    const vendorId = event.data.object.metadata.vendorId;
+    revalidateTag(`vendor-profile-${vendorId}`, "max"); // background — SWR ok
+    revalidateTag(`vendor-layout-${vendorId}`, "max");
   }
 }
 ```
@@ -719,7 +683,7 @@ export default function LeadInbox() {
 // ✅ Only the interactive part is client
 // page.tsx — Server Component
 export default async function LeadInbox() {
-  const user = await getRequiredUser("PAINTER");
+  const user = await getRequiredUser("VENDOR");
   const leads = await getLeads(user.id); // direct DB call
 
   return (
@@ -780,7 +744,7 @@ export async function updateJobStatus(
   formData: FormData
 ): Promise<ActionResult> {
   // Rule 1: Auth first, always
-  const user = await getRequiredUser("PAINTER");
+  const user = await getRequiredUser("VENDOR");
 
   // Rule 2: Validate input with Zod — never trust client data
   const parsed = UpdateJobSchema.safeParse({
@@ -792,7 +756,7 @@ export async function updateJobStatus(
   // Rule 3: Authorization — does this user own this resource?
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
   if (!job) return { success: false, error: "Job not found" };
-  if (job.painterId !== user.id)
+  if (job.vendorId !== user.id)
     return { success: false, error: "Not authorized" };
 
   // Rule 4: Business logic validation — is this transition valid?
@@ -809,13 +773,13 @@ export async function updateJobStatus(
   // Rule 5: DB mutation
   await db
     .update(jobs)
-    .set({ status: parsed.data.status, completedByPainterAt: new Date() })
+    .set({ status: parsed.data.status, completedAt: new Date() })
     .where(eq(jobs.id, jobId));
 
   // Rule 6: Invalidate exactly the caches this mutation affects
   updateTag(`job-${jobId}`);
-  updateTag(`painter-jobs-${user.id}`);
-  updateTag(`homeowner-job-${job.homeownerId}`); // homeowner portal shows job status
+  updateTag(`vendor-bookings-${user.id}`);
+  updateTag(`customer-booking-${job.customerProfileId}`); // customer portal reflects booking status
 
   return { success: true };
 }
@@ -892,19 +856,19 @@ export async function loginAction(formData: FormData) {
 
 ```tsx
 // ❌ Sequential — total time = sum of all three
-async function PainterDashboard({ painterId }: { painterId: string }) {
-  const leads = await getLeads(painterId); // 120ms
-  const jobs = await getJobs(painterId); // 80ms — waits for leads
-  const revenue = await getRevenue(painterId); // 60ms — waits for jobs
+async function VendorDashboard({ vendorId }: { vendorId: string }) {
+  const leads = await getLeads(vendorId); // 120ms
+  const jobs = await getJobs(vendorId); // 80ms — waits for leads
+  const revenue = await getRevenue(vendorId); // 60ms — waits for jobs
   // Total: 260ms
 }
 
 // ✅ Parallel — total time = slowest one
-async function PainterDashboard({ painterId }: { painterId: string }) {
+async function VendorDashboard({ vendorId }: { vendorId: string }) {
   const [leads, jobs, revenue] = await Promise.all([
-    getLeads(painterId), // all three
-    getJobs(painterId), // kick off
-    getRevenue(painterId), // simultaneously
+    getLeads(vendorId), // all three
+    getJobs(vendorId), // kick off
+    getRevenue(vendorId), // simultaneously
   ]);
   // Total: 120ms
 }
@@ -914,7 +878,7 @@ async function PainterDashboard({ painterId }: { painterId: string }) {
 
 ```tsx
 export default async function Dashboard() {
-  const user = await getRequiredUser("PAINTER");
+  const user = await getRequiredUser("VENDOR");
 
   return (
     <div>
@@ -923,16 +887,16 @@ export default async function Dashboard() {
 
       {/* These stream in independently — don't block each other */}
       <Suspense fallback={<LeadsSkeleton />}>
-        <LeadInbox painterId={user.id} />
+        <LeadInbox vendorId={user.id} />
       </Suspense>
 
       <Suspense fallback={<JobsSkeleton />}>
-        <ActiveJobs painterId={user.id} />
+        <ActiveJobs vendorId={user.id} />
       </Suspense>
 
       {/* Slow analytics — streams in last, doesn't block faster sections */}
       <Suspense fallback={<RevenueSkeleton />}>
-        <RevenueChart painterId={user.id} />
+        <RevenueChart vendorId={user.id} />
       </Suspense>
     </div>
   );
@@ -1108,13 +1072,13 @@ Use error.tsx:        at route segment level to catch DB errors, not-found, etc.
 ```
 
 ```tsx
-// app/(painter)/jobs/loading.tsx
+// app/(vendor)/jobs/loading.tsx
 // Shows while jobs/page.tsx is fetching — Next.js shows this automatically
 export default function JobsLoading() {
   return <JobsPageSkeleton />;
 }
 
-// app/(painter)/jobs/error.tsx
+// app/(vendor)/jobs/error.tsx
 ("use client"); // error.tsx MUST be a Client Component
 export default function JobsError({
   error,

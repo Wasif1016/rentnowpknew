@@ -4,26 +4,25 @@ import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
-type Role = 'HOMEOWNER' | 'PAINTER' | 'ADMIN'
+type Role = 'CUSTOMER' | 'VENDOR' | 'ADMIN'
 
 const ROLE_HOMES: Record<Role, string> = {
-  HOMEOWNER: '/dashboard',
-  PAINTER: '/painter/dashboard',
+  CUSTOMER: '/dashboard',
+  VENDOR: '/vendor/dashboard',
   ADMIN: '/admin',
 }
 
 // Use in layouts and pages. Redirects on failure — never returns null.
 export async function getRequiredUser(requiredRole?: Role) {
   const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
 
   if (error || !user) redirect('/login')
 
-  const [dbUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, user.id))
-    .limit(1)
+  const [dbUser] = await db.select().from(users).where(eq(users.id, user.id)).limit(1)
 
   if (!dbUser) redirect('/login')
 
@@ -38,9 +37,13 @@ export async function getRequiredUser(requiredRole?: Role) {
 export async function getOptionalUser() {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return null
     const [dbUser] = await db.select().from(users).where(eq(users.id, user.id)).limit(1)
     return dbUser ?? null
-  } catch { return null }
+  } catch {
+    return null
+  }
 }

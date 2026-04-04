@@ -17,7 +17,7 @@ const SignupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   fullName: z.string().min(2),
-  role: z.enum(['HOMEOWNER', 'PAINTER']),
+  role: z.enum(['CUSTOMER', 'VENDOR']),
 })
 
 // ============================================================

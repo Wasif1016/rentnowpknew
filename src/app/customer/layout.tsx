@@ -1,30 +1,34 @@
+import { Suspense } from 'react'
 import { getRequiredUser } from '@/lib/auth/session'
 
-export default async function HomeownerLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  // Redirects if not logged in OR wrong role — never reaches children
-  const user = await getRequiredUser('HOMEOWNER')
+export default function CustomerLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center text-muted-foreground">Loading…</div>
+      }
+    >
+      <CustomerLayoutInner>{children}</CustomerLayoutInner>
+    </Suspense>
+  )
+}
+
+async function CustomerLayoutInner({ children }: { children: React.ReactNode }) {
+  const user = await getRequiredUser('CUSTOMER')
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar navigation */}
       <aside className="w-64 border-r bg-card">
         <div className="p-4 border-b">
-          <h2 className="font-semibold">Homeowner Portal</h2>
+          <h2 className="font-semibold">RentNowPk</h2>
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <nav className="p-4 space-y-2">
           <a href="/dashboard" className="block px-3 py-2 rounded-md hover:bg-accent">
             Dashboard
           </a>
-          <a href="/dashboard/projects" className="block px-3 py-2 rounded-md hover:bg-accent">
-            My Projects
-          </a>
-          <a href="/dashboard/quotes" className="block px-3 py-2 rounded-md hover:bg-accent">
-            Quotes
+          <a href="/dashboard/bookings" className="block px-3 py-2 rounded-md hover:bg-accent">
+            Bookings
           </a>
           <a href="/dashboard/settings" className="block px-3 py-2 rounded-md hover:bg-accent">
             Settings

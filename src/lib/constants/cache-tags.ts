@@ -1,116 +1,56 @@
-// Cache tags — single source of truth for all cache keys
-// Used with "use cache" directive and updateTag() for cache invalidation
+// Cache tags — use with "use cache" and updateTag() per AGENTS.md
 
-// ============================================================
-// CACHE TAG FACTORIES
-// ============================================================
-
-export function painterProfileTag(painterId: string) {
-  return `painter-profile-${painterId}`
+export function vendorProfileTag(vendorId: string) {
+  return `vendor-profile-${vendorId}`
 }
 
-export function paintersCityTag(city: string, state: string) {
-  return `painters-city-${city}-${state}`
+export function vendorVehiclesTag(vendorId: string) {
+  return `vendor-vehicles-${vendorId}`
 }
 
-export function painterLayoutTag(painterId: string) {
-  return `painter-layout-${painterId}`
+export function vehiclePublicTag(vehicleId: string) {
+  return `vehicle-public-${vehicleId}`
 }
 
-export function painterReviewsTag(painterId: string) {
-  return `painter-reviews-${painterId}`
+export function vehiclesCityTag(city: string) {
+  return `vehicles-city-${city}`
 }
 
-export function painterLeadsTag(painterId: string) {
-  return `painter-leads-${painterId}`
+export function bookingTag(bookingId: string) {
+  return `booking-${bookingId}`
 }
 
-export function projectQuotesTag(projectId: string) {
-  return `project-quotes-${projectId}`
-}
-
-export function projectTag(projectId: string) {
-  return `project-${projectId}`
-}
-
-export function howItWorksTag() {
-  return 'how-it-works'
+export function customerBookingsTag(userId: string) {
+  return `customer-bookings-${userId}`
 }
 
 export function staticContentTag(key: string) {
   return `static-${key}`
 }
 
-// ============================================================
-// CACHE INVALIDATION MAP
-// Maps mutations to the cache tags they should invalidate
-// ============================================================
-
 export const CACHE_INVALIDATION_MAP = {
-  // Painter mutations
-  updatePainterProfile: [
-    (painterId: string, data?: { primaryCity?: string; primaryState?: string }) => [
-      painterProfileTag(painterId),
-      painterLayoutTag(painterId),
-      data?.primaryCity && data?.primaryState
-        ? paintersCityTag(data.primaryCity, data.primaryState)
-        : null,
-    ].filter(Boolean),
+  updateVendorProfile: [
+    (vendorId: string) => [vendorProfileTag(vendorId), vendorVehiclesTag(vendorId)],
   ],
-  updatePortfolio: [
-    (painterId: string) => [painterProfileTag(painterId)],
-  ],
-
-  // Quote mutations
-  submitQuote: [
-    (_quoteId: string, data: { projectId: string; painterId: string }) => [
-      projectQuotesTag(data.projectId),
-      painterLeadsTag(data.painterId),
+  updateVehicle: [
+    (vehicleId: string, vendorId: string) => [
+      vehiclePublicTag(vehicleId),
+      vendorVehiclesTag(vendorId),
     ],
   ],
-  acceptQuote: [
-    (_quoteId: string, data: { projectId: string; painterId: string }) => [
-      projectQuotesTag(data.projectId),
-      painterLeadsTag(data.painterId),
+  updateBooking: [
+    (bookingId: string, customerUserId: string) => [
+      bookingTag(bookingId),
+      customerBookingsTag(customerUserId),
     ],
-  ],
-
-  // Payment mutations
-  releasePayment: [
-    (_jobId: string, data: { painterId: string }) => [
-      painterLayoutTag(data.painterId),
-    ],
-  ],
-
-  // Review mutations
-  submitReview: [
-    (_reviewId: string, data: { painterId: string }) => [
-      painterReviewsTag(data.painterId),
-      painterProfileTag(data.painterId),
-    ],
-  ],
-
-  // Admin mutations
-  approvePainter: [
-    (_painterId: string, data: { primaryCity?: string; primaryState?: string }) => [
-      data?.primaryCity && data?.primaryState
-        ? paintersCityTag(data.primaryCity, data.primaryState)
-        : null,
-    ].filter(Boolean),
   ],
 } as const
 
-// ============================================================
-// TYPE HELPERS
-// ============================================================
-
 export type CacheTag =
-  | ReturnType<typeof painterProfileTag>
-  | ReturnType<typeof paintersCityTag>
-  | ReturnType<typeof painterLayoutTag>
-  | ReturnType<typeof painterReviewsTag>
-  | ReturnType<typeof painterLeadsTag>
-  | ReturnType<typeof projectQuotesTag>
-  | ReturnType<typeof projectTag>
-  | ReturnType<typeof howItWorksTag>
+  | ReturnType<typeof vendorProfileTag>
+  | ReturnType<typeof vendorVehiclesTag>
+  | ReturnType<typeof vehiclePublicTag>
+  | ReturnType<typeof vehiclesCityTag>
+  | ReturnType<typeof bookingTag>
+  | ReturnType<typeof customerBookingsTag>
   | ReturnType<typeof staticContentTag>

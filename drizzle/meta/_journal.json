@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1775285883455,
+      "tag": "0000_rentnowpk_foundation",
+      "breakpoints": true
+    }
+  ]
+}

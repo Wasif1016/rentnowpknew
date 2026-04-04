@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Figtree } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Painters - Find the Best Local Painters",
-  description: "Connect with professional painters in your area",
+  title: "RentNowPk — Car rental marketplace",
+  description: "Find and book rental vehicles from verified vendors across Pakistan.",
 };
 
 export default function RootLayout({

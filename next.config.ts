@@ -23,13 +23,13 @@ const nextConfig: NextConfig = {
       revalidate: 60 * 60 * 24, // recheck once/day
       expire: 60 * 60 * 24 * 30, // max 30 days
     },
-    // Painter profiles, city pages, reviews — updates occasionally
+    // Vendor profiles, city pages, reviews — updates occasionally
     standard: {
       stale: 60, // 1 min client
       revalidate: 300, // recheck every 5 min
       expire: 3600, // max 1 hour
     },
-    // Lead counts, active job statuses — updates frequently
+    // Booking counts, search — updates frequently
     live: {
       stale: 10,
       revalidate: 30,

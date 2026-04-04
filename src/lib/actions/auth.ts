@@ -1,113 +1,78 @@
 'use server'
 
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-
-// ============================================================
-// SCHEMAS
-// ============================================================
+import { eq } from 'drizzle-orm'
+import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
+import { users } from '@/lib/db/schema'
+import { resolveRedirectAfterLogin, type AppRole } from '@/lib/auth/safe-next'
 
 const LoginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(1),
 })
 
-const SignupSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  fullName: z.string().min(2),
-  role: z.enum(['CUSTOMER', 'VENDOR']),
-})
-
-// ============================================================
-// TYPES
-// ============================================================
-
-type ActionResult<T = void> =
+export type ActionResult<T = void> =
   | { success: true; data?: T }
   | { success: false; error: string }
 
-// ============================================================
-// ACTIONS
-// ============================================================
+export async function loginAction(
+  formData: FormData
+): Promise<ActionResult<{ redirectTo: string }>> {
+  const nextRaw = formData.get('next')
+  const next = typeof nextRaw === 'string' ? nextRaw : null
 
-/**
- * Login action - authenticates user and redirects to role-based dashboard
- */
-export async function loginAction(formData: FormData): Promise<ActionResult> {
   const parsed = LoginSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
   })
 
   if (!parsed.success) {
-    return { success: false, error: 'Invalid email or password' }
+    return { success: false, error: 'Invalid email or password.' }
   }
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
+    email: parsed.data.email.trim().toLowerCase(),
     password: parsed.data.password,
   })
 
   if (error) {
-    return { success: false, error: error.message }
+    return { success: false, error: mapLoginError(error.message) }
   }
 
-  // Redirect handled by client - return success
-  return { success: true }
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+  if (!authUser) {
+    return { success: false, error: 'Could not sign in.' }
+  }
+
+  const [dbUser] = await db.select().from(users).where(eq(users.id, authUser.id)).limit(1)
+
+  if (!dbUser) {
+    await supabase.auth.signOut()
+    return {
+      success: false,
+      error: 'Account setup is incomplete. Contact support or try signing up again.',
+    }
+  }
+
+  const role = dbUser.role as AppRole
+  const redirectTo = resolveRedirectAfterLogin(role, next)
+
+  return { success: true, data: { redirectTo } }
 }
 
-/**
- * Signup action - creates Supabase user + User record, redirects based on role
- */
-export async function signupAction(formData: FormData): Promise<ActionResult<{ userId: string }>> {
-  const parsed = SignupSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
-    fullName: formData.get('fullName'),
-    role: formData.get('role'),
-  })
-
-  if (!parsed.success) {
-    return { success: false, error: 'Invalid signup data' }
-  }
-
-  const supabase = await createClient()
-
-  // Create Supabase auth user
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      data: {
-        full_name: parsed.data.fullName,
-        role: parsed.data.role,
-      },
-    },
-  })
-
-  if (authError || !authData.user) {
-    return { success: false, error: authError?.message || 'Failed to create account' }
-  }
-
-  // TODO: Create User record in database (requires database to be set up)
-  // const { db } = await import('@/lib/db')
-  // const { users } = await import('@/lib/db/schema')
-  // await db.insert(users).values({
-  //   id: authData.user.id,
-  //   email: parsed.data.email,
-  //   fullName: parsed.data.fullName,
-  //   role: parsed.data.role,
-  // })
-
-  return { success: true, data: { userId: authData.user.id } }
+function mapLoginError(raw: string): string {
+  const lower = raw.toLowerCase()
+  if (lower.includes('invalid login') || lower.includes('invalid credentials'))
+    return 'Invalid email or password.'
+  if (lower.includes('email not confirmed')) return 'Please confirm your email before signing in.'
+  return 'Could not sign in. Try again.'
 }
 
-/**
- * Logout action - signs out user and redirects to home
- */
 export async function logoutAction(): Promise<ActionResult> {
   const supabase = await createClient()
   const { error } = await supabase.auth.signOut()
@@ -119,15 +84,17 @@ export async function logoutAction(): Promise<ActionResult> {
   redirect('/')
 }
 
-/**
- * Get OAuth sign in URL for provider
- */
 export async function getOAuthSignInUrl(provider: 'google' | 'apple') {
+  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+  if (!base) {
+    return { success: false, error: 'App URL is not configured' }
+  }
+
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/callback`,
+      redirectTo: `${base}/auth/callback`,
     },
   })
 
@@ -138,9 +105,6 @@ export async function getOAuthSignInUrl(provider: 'google' | 'apple') {
   return { success: true, data: { url: data.url } }
 }
 
-/**
- * Reset password action
- */
 export async function resetPasswordAction(formData: FormData): Promise<ActionResult> {
   const email = formData.get('email')
 
@@ -148,9 +112,14 @@ export async function resetPasswordAction(formData: FormData): Promise<ActionRes
     return { success: false, error: 'Email is required' }
   }
 
+  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+  if (!base) {
+    return { success: false, error: 'App URL is not configured' }
+  }
+
   const supabase = await createClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/reset-password`,
+    redirectTo: `${base}/auth/reset-password`,
   })
 
   if (error) {

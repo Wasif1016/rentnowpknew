@@ -12,6 +12,16 @@ Route groups in parentheses **do not** appear in the URL.
 
 Uses `(public)/layout.tsx` (marketing header/footer).
 
+## Auth — `src/app/auth/`
+
+| URL              | File                     | Notes                                        |
+| ---------------- | ------------------------ | -------------------------------------------- |
+| `/auth/login`    | `auth/login/page.tsx`    | Email/password; optional `next` query        |
+| `/auth/signup`   | `auth/signup/page.tsx`   | Vendor registration (Supabase + trigger)     |
+| `/auth/callback` | `auth/callback/route.ts` | PKCE / email-link `code` exchange + redirect |
+
+Minimal `auth/layout.tsx` (centered card, no marketing chrome).
+
 ## Customer — `src/app/customer/`
 
 Requires auth + `CUSTOMER` role (`customer/layout.tsx`).
@@ -47,6 +57,8 @@ Requires auth + `ADMIN` role (`admin/layout.tsx`).
 | `/api/inngest` | Inngest webhook |
 
 ## Auth redirects
+
+Unauthenticated users are sent to [`/auth/login`](../src/app/auth/login/page.tsx). Missing `public.users` row (e.g. trigger failure): `/auth/login?error=setup_incomplete`.
 
 `getRequiredUser()` in [`src/lib/auth/session.ts`](../src/lib/auth/session.ts) sends users to the correct home by role:
 

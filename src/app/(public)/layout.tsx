@@ -22,11 +22,11 @@ export default function MarketingLayout({
             <Link href="/for-vendors" className="text-sm font-medium">
               For vendors
             </Link>
-            <Link href="/login" className="text-sm font-medium">
+            <Link href="/auth/login" className="text-sm font-medium">
               Login
             </Link>
             <Link
-              href="/join"
+              href="/auth/signup"
               className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md"
             >
               Get started

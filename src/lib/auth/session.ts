@@ -20,11 +20,13 @@ export async function getRequiredUser(requiredRole?: Role) {
     error,
   } = await supabase.auth.getUser()
 
-  if (error || !user) redirect('/login')
+  if (error || !user) redirect('/auth/login')
 
   const [dbUser] = await db.select().from(users).where(eq(users.id, user.id)).limit(1)
 
-  if (!dbUser) redirect('/login')
+  if (!dbUser) {
+    redirect('/auth/login?error=setup_incomplete')
+  }
 
   if (requiredRole && dbUser.role !== requiredRole) {
     redirect(ROLE_HOMES[dbUser.role as Role])

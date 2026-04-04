@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { showToast } from '@/components/ui/toast'
+import { VehicleMakeModelYear } from '@/components/vendor/vehicle-make-model-year'
 import { VehiclePickupMap } from '@/components/vendor/vehicle-pickup-map'
 
 const MAX_BYTES = 8 * 1024 * 1024
@@ -117,7 +118,7 @@ export function AddVehicleForm() {
   return (
     <form
       action={formAction}
-      className="mx-auto flex max-w-2xl flex-col gap-8"
+      className="flex max-w-2xl flex-col gap-8"
       encType="multipart/form-data"
     >
       <input type="hidden" name="cities" value={citiesJson} />
@@ -149,54 +150,17 @@ export function AddVehicleForm() {
           ) : null}
         </Field>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field data-invalid={!!fieldError(fe, 'make')}>
-            <FieldLabel htmlFor="vehicle-make">Make</FieldLabel>
-            <Input
-              id="vehicle-make"
-              name="make"
-              required
-              autoComplete="off"
-              className="bg-card border-border"
-              aria-invalid={!!fieldError(fe, 'make')}
-            />
-            {fieldError(fe, 'make') ? (
-              <FieldError>{fieldError(fe, 'make')}</FieldError>
-            ) : null}
-          </Field>
-          <Field data-invalid={!!fieldError(fe, 'model')}>
-            <FieldLabel htmlFor="vehicle-model">Model</FieldLabel>
-            <Input
-              id="vehicle-model"
-              name="model"
-              required
-              autoComplete="off"
-              className="bg-card border-border"
-              aria-invalid={!!fieldError(fe, 'model')}
-            />
-            {fieldError(fe, 'model') ? (
-              <FieldError>{fieldError(fe, 'model')}</FieldError>
-            ) : null}
-          </Field>
-        </div>
-
-        <Field data-invalid={!!fieldError(fe, 'year')}>
-          <FieldLabel htmlFor="vehicle-year">Year</FieldLabel>
-          <Input
-            id="vehicle-year"
-            name="year"
-            type="number"
-            required
-            min={1990}
-            max={new Date().getFullYear() + 1}
-            step={1}
-            className="bg-card border-border sm:max-w-48"
-            aria-invalid={!!fieldError(fe, 'year')}
-          />
-          {fieldError(fe, 'year') ? (
-            <FieldError>{fieldError(fe, 'year')}</FieldError>
-          ) : null}
-        </Field>
+        <VehicleMakeModelYear
+          fieldErrors={
+            fe
+              ? {
+                  make: fieldError(fe, 'make'),
+                  model: fieldError(fe, 'model'),
+                  year: fieldError(fe, 'year'),
+                }
+              : undefined
+          }
+        />
       </FieldGroup>
 
       <VehiclePickupMap

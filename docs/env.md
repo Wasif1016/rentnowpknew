@@ -10,6 +10,17 @@ Never commit real secrets. Copy values into `.env` locally and configure the sam
 | `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL.                                                                                                                                                                                                                                                                                 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (browser-safe).                                                                                                                                                                                                                                                                     |
 
+## Logo.dev (vehicle make logo)
+
+When vendors save a vehicle, the app stores the **Logo.dev image URL** in `make_logo_url` on `vehicles` (no extra image hosting). Cards use that URL in `<img>` / `next/image`.
+
+| Variable                              | Purpose                                                                 |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| `NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY` | Same publishable key from [Logo.dev](https://www.logo.dev/). Exposed to the browser so the make **dropdown** can render logos without calling your API per row. |
+| `LOGO_DEV_PUBLISHABLE_KEY`            | Optional fallback (server only). If you only set `NEXT_PUBLIC_…`, that is enough for both server and client. |
+
+If unset, vehicles are created without a stored make logo, and the make combobox falls back to initials.
+
 ## Cloudinary (vendor verification & vehicle photos)
 
 Server-side uploads only. Same credentials for both flows.

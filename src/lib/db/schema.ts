@@ -199,6 +199,8 @@ export const vehicles = pgTable(
     slug: text("slug").notNull(),
     name: text("name").notNull(),
     make: text("make").notNull(),
+    /** Logo.dev image URL for the make (stored at create time; browser loads from Logo.dev CDN). */
+    makeLogoUrl: text("make_logo_url"),
     model: text("model").notNull(),
     year: smallint("year").notNull(),
 

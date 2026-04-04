@@ -19,6 +19,7 @@ import {
   slugifyVehicleBase,
 } from '@/lib/vehicles/slug'
 import type { ZodIssue } from 'zod'
+import { buildLogoDevMakeImageUrl } from '@/lib/logo-dev/server'
 import {
   createVehicleFieldsSchema,
   dedupeCities,
@@ -269,6 +270,14 @@ export async function createVehicle(
     })
 
     vehicleId = inserted.id
+
+    const makeLogoUrl = buildLogoDevMakeImageUrl(data.make.trim())
+    if (makeLogoUrl) {
+      await db
+        .update(vehicles)
+        .set({ makeLogoUrl })
+        .where(eq(vehicles.id, inserted.id))
+    }
 
     const buffers = await Promise.all(
       imageParts.map((file, i) => readImagePart(file, i))

@@ -1,0 +1,1 @@
+ALTER TABLE "vehicles" ADD COLUMN "make_logo_url" text;

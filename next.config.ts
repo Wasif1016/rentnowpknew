@@ -50,6 +50,11 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "img.logo.dev",
+        pathname: "/**",
+      },
     ],
   },
 

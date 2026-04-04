@@ -65,6 +65,17 @@ export default async function VendorVehiclesPage({
                     No photo
                   </div>
                 )}
+                {v.makeLogoUrl ? (
+                  <div className="bg-card absolute right-1 bottom-1 size-7 overflow-hidden rounded-md ring-1 ring-border">
+                    <Image
+                      src={v.makeLogoUrl}
+                      alt=""
+                      width={28}
+                      height={28}
+                      className="size-full object-contain p-0.5"
+                    />
+                  </div>
+                ) : null}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-foreground font-medium">{v.name}</p>

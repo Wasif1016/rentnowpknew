@@ -8,6 +8,7 @@ export type VendorVehicleListRow = {
   slug: string
   isActive: boolean
   coverUrl: string | null
+  makeLogoUrl: string | null
   cities: string[]
   pickupFormattedAddress: string | null
 }
@@ -22,6 +23,7 @@ export async function listVendorVehiclesWithMeta(
       slug: vehicles.slug,
       isActive: vehicles.isActive,
       coverUrl: vehicleImages.url,
+      makeLogoUrl: vehicles.makeLogoUrl,
       pickupFormattedAddress: vehicles.pickupFormattedAddress,
     })
     .from(vehicles)
@@ -58,6 +60,7 @@ export async function listVendorVehiclesWithMeta(
     slug: v.slug,
     isActive: v.isActive,
     coverUrl: v.coverUrl,
+    makeLogoUrl: v.makeLogoUrl,
     cities: cityMap.get(v.id) ?? [],
     pickupFormattedAddress: v.pickupFormattedAddress,
   }))

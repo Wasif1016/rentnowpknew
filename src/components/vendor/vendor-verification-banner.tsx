@@ -25,7 +25,7 @@ export function VendorVerificationBanner({
     return (
       <div
         className={cn(
-          'mb-6 flex flex-col gap-2 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm',
+          'mb-6 flex flex-col gap-2 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm',
           'sm:flex-row sm:items-center sm:justify-between'
         )}
         role="status"
@@ -43,7 +43,7 @@ export function VendorVerificationBanner({
       <>
         <div
           className={cn(
-            'mb-6 flex flex-col gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm',
+            'mb-6 flex flex-col gap-3 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm',
             'sm:flex-row sm:items-center sm:justify-between'
           )}
         >
@@ -70,7 +70,7 @@ export function VendorVerificationBanner({
     <>
       <div
         className={cn(
-          'mb-6 flex flex-col gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm',
+          'mb-6 flex flex-col gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm',
           'sm:flex-row sm:items-start sm:justify-between'
         )}
         role="alert"

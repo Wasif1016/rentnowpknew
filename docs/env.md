@@ -10,9 +10,9 @@ Never commit real secrets. Copy values into `.env` locally and configure the sam
 | `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL.                                                                                                                                                                                                                                                                                 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (browser-safe).                                                                                                                                                                                                                                                                     |
 
-## Vendor verification (Cloudinary)
+## Cloudinary (vendor verification & vehicle photos)
 
-Server-side uploads only. Used when a vendor submits the verification wizard.
+Server-side uploads only. Same credentials for both flows.
 
 | Variable                | Purpose                                   |
 | ----------------------- | ----------------------------------------- |
@@ -20,4 +20,20 @@ Server-side uploads only. Used when a vendor submits the verification wizard.
 | `CLOUDINARY_API_KEY`    | API key.                                  |
 | `CLOUDINARY_API_SECRET` | API secret (server only).                 |
 
-Images are stored under folders like `rentnowpk/vendor-verification/{vendorProfileId}/`.
+Folders:
+
+- Vendor KYC: `rentnowpk/vendor-verification/{vendorProfileId}/`
+- Vehicle listing images: `rentnowpk/vehicles/{vehicleId}/`
+
+## Google Maps Platform
+
+Use **two API keys** in Google Cloud (different restrictions):
+
+| Variable | Purpose |
+| -------- | ------- |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Browser: Maps JavaScript API, Places (Autocomplete / map). Restrict by **HTTP referrer** to your domains. |
+| `GOOGLE_MAPS_SERVER_KEY` | Server only: Place Details, Geocoding, Directions. Restrict by **IP** (e.g. Vercel) or restrict APIs only; never expose to the client. |
+
+Enable at minimum: **Maps JavaScript API**, **Places API**, **Geocoding API**, **Directions API** (per feature usage).
+
+Never log full API responses containing user addresses in production.

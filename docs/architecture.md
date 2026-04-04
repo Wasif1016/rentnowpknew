@@ -117,6 +117,7 @@ Submission sets `vendor_profiles.verification_submitted_at`. The vendor dashboar
 Each vehicle includes:
 - Up to 5 images (first image is cover by default, vendor can change cover manually)
 - Vehicle name, make, model, year
+- **Primary pickup location** (Google Maps: search + map pin) stored as Place ID, coordinates, and formatted address; used for proximity search (Haversine in DB) and future customer flows
 - City/cities where the vehicle is available for pickup (vendor can list in multiple cities; auto-fills city for subsequent listings)
 - Drive type: With Driver, Self Drive, or both (vendor enables each separately and sets price for each)
 - Price per day and per month for each enabled drive type

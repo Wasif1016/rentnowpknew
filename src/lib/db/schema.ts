@@ -13,6 +13,7 @@ import {
   integer,
   smallint,
   decimal,
+  doublePrecision,
   timestamp,
   index,
   uniqueIndex,
@@ -222,6 +223,12 @@ export const vehicles = pgTable(
     }),
 
     isActive: boolean("is_active").notNull().default(true),
+
+    /** Primary pickup point (WGS84). Nullable for legacy rows; required on new creates in app logic. */
+    pickupLatitude: doublePrecision("pickup_latitude"),
+    pickupLongitude: doublePrecision("pickup_longitude"),
+    pickupPlaceId: text("pickup_place_id"),
+    pickupFormattedAddress: text("pickup_formatted_address"),
 
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

@@ -1,0 +1,115 @@
+import 'server-only'
+
+import { getGoogleMapsServerKey } from '@/lib/google-maps/config'
+import { haversineDistanceMeters } from '@/lib/geo/haversine'
+
+export type PlaceDetailsResult = {
+  placeId: string
+  lat: number
+  lng: number
+  formattedAddress: string
+}
+
+const DETAILS_BASE = 'https://maps.googleapis.com/maps/api/place/details/json'
+
+/**
+ * Fetch canonical geometry + address for a Place ID (server-side).
+ */
+export async function getPlaceDetails(
+  placeId: string
+): Promise<PlaceDetailsResult | null> {
+  const key = getGoogleMapsServerKey()
+  const params = new URLSearchParams({
+    place_id: placeId,
+    fields: 'geometry,formatted_address,place_id',
+    key,
+  })
+  const res = await fetch(`${DETAILS_BASE}?${params.toString()}`, {
+    next: { revalidate: 0 },
+  })
+  if (!res.ok) return null
+
+  const data = (await res.json()) as {
+    status: string
+    result?: {
+      place_id?: string
+      formatted_address?: string
+      geometry?: { location?: { lat: number; lng: number } }
+    }
+  }
+
+  if (data.status !== 'OK' || !data.result?.geometry?.location) {
+    return null
+  }
+
+  const loc = data.result.geometry.location
+  return {
+    placeId: data.result.place_id ?? placeId,
+    lat: loc.lat,
+    lng: loc.lng,
+    formattedAddress: data.result.formatted_address ?? '',
+  }
+}
+
+/** Max distance (meters) between client-submitted coords and Places API geometry. */
+const VERIFY_TOLERANCE_M = 200
+
+/**
+ * Ensures client lat/lng matches Google's Place Details (anti-tamper).
+ */
+export function clientCoordsMatchPlaceDetails(
+  clientLat: number,
+  clientLng: number,
+  official: PlaceDetailsResult
+): boolean {
+  const m = haversineDistanceMeters(
+    clientLat,
+    clientLng,
+    official.lat,
+    official.lng
+  )
+  return m <= VERIFY_TOLERANCE_M
+}
+
+const GEOCODE_BASE = 'https://maps.googleapis.com/maps/api/geocode/json'
+
+export type ReverseGeocodeResult = {
+  formattedAddress: string
+  placeId: string | null
+}
+
+/**
+ * Reverse geocode when the user adjusted the pin without a Places selection.
+ */
+export async function reverseGeocode(
+  lat: number,
+  lng: number
+): Promise<ReverseGeocodeResult | null> {
+  const key = getGoogleMapsServerKey()
+  const params = new URLSearchParams({
+    latlng: `${lat},${lng}`,
+    key,
+  })
+  const res = await fetch(`${GEOCODE_BASE}?${params.toString()}`, {
+    next: { revalidate: 0 },
+  })
+  if (!res.ok) return null
+
+  const data = (await res.json()) as {
+    status: string
+    results?: Array<{
+      formatted_address?: string
+      place_id?: string
+    }>
+  }
+
+  if (data.status !== 'OK' || !data.results?.[0]) {
+    return null
+  }
+
+  const first = data.results[0]
+  return {
+    formattedAddress: first.formatted_address ?? '',
+    placeId: first.place_id ?? null,
+  }
+}

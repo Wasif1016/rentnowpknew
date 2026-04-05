@@ -40,6 +40,17 @@ export async function GET(request: Request) {
     return redirectToPath(requestUrl, '/auth/login?error=setup_incomplete')
   }
 
+  // Keep public.users.email aligned with Auth after email confirmation / OAuth (PKCE).
+  // Configure Supabase Auth redirect URLs so email-change flows can return here when using PKCE.
+  const authEmail = authUser.email?.trim().toLowerCase() ?? ''
+  const dbEmail = dbUser.email.trim().toLowerCase()
+  if (authEmail && authEmail !== dbEmail) {
+    await db
+      .update(users)
+      .set({ email: authUser.email!.trim().toLowerCase(), updatedAt: new Date() })
+      .where(eq(users.id, authUser.id))
+  }
+
   const role = dbUser.role as AppRole
   const path = resolveRedirectAfterLogin(role, nextParam)
 

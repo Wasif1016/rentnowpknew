@@ -1,6 +1,7 @@
-// Notifications helper — in-app rows now; email/SMS via Brevo/Twilio later.
+// Notifications helper — in-app rows; email via Brevo transactional templates; SMS stub for later.
 
 import { db } from '@/lib/db'
+import { sendTransactionalEmail, type EmailTemplateKey } from '@/lib/email'
 import { notifications, notificationTypeEnum, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
@@ -17,10 +18,14 @@ export interface SendNotificationOptions {
   sendSms?: boolean
   sendEmail?: boolean
   sendInApp?: boolean
+  /** When sendEmail is true, use this Brevo template + params (required for email delivery). */
+  emailTemplateKey?: EmailTemplateKey
+  /** Must match placeholder names in the Brevo template (e.g. BUSINESS_NAME). */
+  emailParams?: Record<string, string | number | boolean>
 }
 
 export interface NotificationResult {
-  inApp?: { success: boolean; error?: string }
+  inApp?: { success: boolean; error?: string; notificationId?: string }
   email?: { success: boolean; error?: string }
   sms?: { success: boolean; error?: string }
 }
@@ -37,29 +42,44 @@ async function createInAppNotification(
     entityType?: string
     entityId?: string
   }
-) {
+): Promise<{ success: boolean; error?: string; notificationId?: string }> {
   try {
-    await db.insert(notifications).values({
-      userId,
-      type,
-      title,
-      body,
-      actionUrl: options?.actionUrl,
-      entityType: options?.entityType,
-      entityId: options?.entityId,
-      sentInApp: true,
-      isRead: false,
-    })
-    return { success: true }
+    const [row] = await db
+      .insert(notifications)
+      .values({
+        userId,
+        type,
+        title,
+        body,
+        actionUrl: options?.actionUrl,
+        entityType: options?.entityType,
+        entityId: options?.entityId,
+        sentInApp: true,
+        isRead: false,
+      })
+      .returning({ id: notifications.id })
+    return { success: true, notificationId: row?.id }
   } catch (error) {
     console.error('Failed to create in-app notification:', error)
     return { success: false, error: String(error) }
   }
 }
 
-async function sendEmailNotification(email: string, subject: string, htmlBody: string) {
-  console.log(`[Email] To: ${email}, Subject: ${subject}, bodyLength: ${htmlBody.length}`)
-  return { success: true }
+async function sendEmailViaBrevo(
+  email: string,
+  templateKey: EmailTemplateKey,
+  params: Record<string, string | number | boolean>
+) {
+  const stringParams: Record<string, string> = {}
+  for (const [k, v] of Object.entries(params)) {
+    stringParams[k] = String(v)
+  }
+  await sendTransactionalEmail({
+    templateKey,
+    to: email,
+    params: stringParams,
+  })
+  return { success: true as const }
 }
 
 async function sendSmsNotification(phone: string, body: string) {
@@ -79,6 +99,8 @@ export async function sendNotification(options: SendNotificationOptions): Promis
     sendInApp = true,
     sendEmail = false,
     sendSms = false,
+    emailTemplateKey,
+    emailParams,
   } = options
 
   const result: NotificationResult = {}
@@ -91,15 +113,36 @@ export async function sendNotification(options: SendNotificationOptions): Promis
   }
 
   if (sendInApp) {
-    result.inApp = await createInAppNotification(userId, type, title, body, {
+    const inApp = await createInAppNotification(userId, type, title, body, {
       actionUrl,
       entityType,
       entityId,
     })
+    result.inApp = inApp
   }
 
   if (sendEmail && user.email) {
-    result.email = await sendEmailNotification(user.email, title, body)
+    if (!emailTemplateKey || !emailParams) {
+      result.email = {
+        success: false,
+        error: 'emailTemplateKey and emailParams are required when sendEmail is true',
+      }
+    } else {
+      try {
+        await sendEmailViaBrevo(user.email, emailTemplateKey, emailParams)
+        result.email = { success: true }
+        if (result.inApp?.notificationId) {
+          await db
+            .update(notifications)
+            .set({ sentEmail: true })
+            .where(eq(notifications.id, result.inApp.notificationId))
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
+        console.error('Brevo email failed:', msg)
+        result.email = { success: false, error: msg }
+      }
+    }
   }
 
   const shouldSendSms =

@@ -46,9 +46,10 @@ Requires auth + `VENDOR` role (`vendor/layout.tsx`).
 
 Requires auth + `ADMIN` role (`admin/layout.tsx`).
 
-| URL      | Notes                        |
-| -------- | ---------------------------- |
-| `/admin` | Dashboard (`admin/page.tsx`) |
+| URL              | Notes                                              |
+| ---------------- | -------------------------------------------------- |
+| `/admin`         | Dashboard (`admin/page.tsx`)                       |
+| `/admin/vendors` | Vendor list, verification review (`admin/vendors/page.tsx`) |
 
 ## API
 

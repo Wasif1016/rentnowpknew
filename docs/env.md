@@ -48,3 +48,19 @@ Use **two API keys** in Google Cloud (different restrictions):
 Enable at minimum: **Maps JavaScript API**, **Places API**, **Geocoding API**, **Directions API** (per feature usage).
 
 Never log full API responses containing user addresses in production.
+
+## Brevo (transactional email)
+
+Server-only. Used for notifications such as vendor verification approved/rejected. Create templates in the [Brevo](https://www.brevo.com/) dashboard and map placeholder names to the params built in [`src/lib/email/templates/params.ts`](../src/lib/email/templates/params.ts) (e.g. `BUSINESS_NAME`, `DASHBOARD_URL`, `REJECTION_REASON`).
+
+| Variable | Purpose |
+| -------- | ------- |
+| `BREVO_API_KEY` | API key (SMTP & API → API keys). Never expose to the client. |
+| `BREVO_SENDER_EMAIL` | Verified sender email (e.g. `help@rentnowpk.com`). |
+| `BREVO_SENDER_NAME` | Optional display name (defaults to `RentNowPk`). |
+| `BREVO_TEMPLATE_VENDOR_VERIFICATION_APPROVED` | Numeric ID of the “verification approved” transactional template. |
+| `BREVO_TEMPLATE_VENDOR_VERIFICATION_REJECTED` | Numeric ID of the “verification rejected” transactional template. |
+
+Add new email types by extending [`src/lib/email/templates/registry.ts`](../src/lib/email/templates/registry.ts), adding env vars for each template ID, and creating matching templates in Brevo.
+
+`NEXT_PUBLIC_APP_URL` must be set so email templates can link to the vendor dashboard.

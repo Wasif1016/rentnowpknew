@@ -100,3 +100,20 @@ export function parseLocalToE164(
     message: 'Enter a valid phone number for the selected country.',
   }
 }
+
+/**
+ * E.164 (e.g. from DB) → country ISO + national digits for phone inputs.
+ * Returns null if the number cannot be parsed as valid E.164.
+ */
+export function e164ToCountryAndNational(
+  e164: string
+): { countryCode: string; nationalNumber: string } | null {
+  const trimmed = e164.trim()
+  if (!trimmed.startsWith('+')) return null
+  const p = parsePhoneNumberFromString(trimmed)
+  if (!p?.isValid() || !p.country) return null
+  return {
+    countryCode: p.country,
+    nationalNumber: String(p.nationalNumber),
+  }
+}

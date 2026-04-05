@@ -43,6 +43,13 @@
       "when": 1775367402628,
       "tag": "0005_vendor_public_slug",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1775400000000,
+      "tag": "0006_chat_rls_broadcast",
+      "breakpoints": true
     }
   ]
 }

@@ -30,21 +30,24 @@ Minimal `auth/layout.tsx` (centered card, no marketing chrome).
 
 Requires auth + `CUSTOMER` role (`customer/layout.tsx`).
 
-| URL                  | Notes                           |
-| -------------------- | ------------------------------- |
-| `/customer`          | Dashboard (`customer/page.tsx`) |
-| `/customer/bookings` | Add when built                  |
-| `/customer/settings` | Add when built                  |
+| URL                                    | Notes                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| `/customer`                            | Dashboard (`customer/page.tsx`)                                     |
+| `/customer/bookings`                   | Booking list with links to chat (`customer/bookings/page.tsx`)      |
+| `/customer/bookings/[bookingId]/chat`  | Booking-scoped chat thread (`customer/bookings/[bookingId]/chat/page.tsx`) |
+| `/customer/settings`                   | Add when built                                                        |
 
 ## Vendor — `src/app/vendor/`
 
 Requires auth + `VENDOR` role (`vendor/layout.tsx`).
 
-| URL                    | Notes                                                   |
-| ---------------------- | ------------------------------------------------------- |
-| `/vendor`              | Dashboard (`vendor/page.tsx`)                           |
-| `/vendor/vehicles`     | Fleet list                                              |
-| `/vendor/vehicles/add` | Add vehicle (architecture: post-verify redirect target) |
+| URL                                      | Notes                                                                 |
+| ---------------------------------------- | --------------------------------------------------------------------- |
+| `/vendor`                                | Dashboard (`vendor/page.tsx`)                                         |
+| `/vendor/bookings`                       | Booking list with links to chat (`vendor/bookings/page.tsx`)          |
+| `/vendor/bookings/[bookingId]/chat`      | Booking-scoped chat thread (`vendor/bookings/[bookingId]/chat/page.tsx`) |
+| `/vendor/vehicles`                       | Fleet list                                                            |
+| `/vendor/vehicles/add`                   | Add vehicle (architecture: post-verify redirect target)               |
 
 ## Admin — `src/app/admin/`
 

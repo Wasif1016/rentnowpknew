@@ -24,6 +24,10 @@ export function customerBookingsTag(userId: string) {
   return `customer-bookings-${userId}`
 }
 
+export function vendorBookingsTag(vendorUserId: string) {
+  return `vendor-bookings-${vendorUserId}`
+}
+
 export function staticContentTag(key: string) {
   return `static-${key}`
 }
@@ -53,4 +57,5 @@ export type CacheTag =
   | ReturnType<typeof vehiclesCityTag>
   | ReturnType<typeof bookingTag>
   | ReturnType<typeof customerBookingsTag>
+  | ReturnType<typeof vendorBookingsTag>
   | ReturnType<typeof staticContentTag>

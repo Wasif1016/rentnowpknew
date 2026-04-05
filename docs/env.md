@@ -10,6 +10,10 @@ Never commit real secrets. Copy values into `.env` locally and configure the sam
 | `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL.                                                                                                                                                                                                                                                                                 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (browser-safe).                                                                                                                                                                                                                                                                     |
 
+### Supabase Realtime (booking chat)
+
+For **private** Broadcast channels (`thread:{uuid}`) with RLS on `realtime.messages`, turn off **Allow public access** under **Project → Realtime → Settings** so authorization policies are enforced. The app uses `supabase.channel(topic, { config: { private: true } })` and `realtime.setAuth()` with the user JWT.
+
 ## Logo.dev (vehicle make logo)
 
 When vendors save a vehicle, the app stores the **Logo.dev image URL** in `make_logo_url` on `vehicles` (no extra image hosting). Cards use that URL in `<img>` / `next/image`.

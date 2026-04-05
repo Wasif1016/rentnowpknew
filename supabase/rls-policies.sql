@@ -18,3 +18,7 @@
 -- Tables that MUST have policies before any anon/authenticated direct access:
 -- users, customer_profiles, vendor_profiles, vehicles, vehicle_*,
 -- bookings, chat_threads, messages, reviews, notifications, incidents, vehicle_date_blocks
+--
+-- Chat (applied via Drizzle migration `drizzle/0006_chat_rls_broadcast.sql`):
+-- - RLS on public.chat_threads + public.messages (participants only; writes via Server Actions / Drizzle).
+-- - RLS on realtime.messages for Broadcast on topic `thread:{chat_threads.id}` (private channels + setAuth).

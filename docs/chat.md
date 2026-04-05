@@ -1,3 +1,7 @@
+> **RentNowPk implementation:** This repo uses a **booking-scoped** model (`chat_threads` + `messages` in [`src/lib/db/schema.ts`](../src/lib/db/schema.ts)), not the generic `conversations` / `conversation_participants` schema below. Prefer [`docs/architecture.md`](./architecture.md) (booking flow) and the applied SQL in [`drizzle/0006_chat_rls_broadcast.sql`](../drizzle/0006_chat_rls_broadcast.sql) for RLS, Realtime topics (`thread:{uuid}`), and triggers. Treat the rest of this file as a **reference** and validate against current [Supabase Realtime](https://supabase.com/docs/guides/realtime) docs before changing behavior.
+
+---
+
 I now have enough research from the official Supabase docs, GitHub, and community sources to write a definitive, accurate, non-fluffy architectural blueprint. Let me build it.
 
 ---

@@ -3,12 +3,14 @@
 import { updateTag } from 'next/cache'
 import { eq, and } from 'drizzle-orm'
 import { getRequiredUser } from '@/lib/auth/session'
-import { customerBookingsTag } from '@/lib/constants/cache-tags'
+import { customerBookingsTag, vendorBookingsTag } from '@/lib/constants/cache-tags'
 import { ensureCustomerProfile } from '@/lib/db/customer-profile'
 import { db } from '@/lib/db'
 import {
   bookings,
+  chatThreads,
   customerProfiles,
+  messages,
   users,
   vehicles,
   vendorProfiles,
@@ -112,6 +114,8 @@ export async function createBookingRequest(
   const pickupAt = new Date(parsed.data.pickupAt)
   const dropoffAt = new Date(parsed.data.dropoffAt)
 
+  const distanceStr = route != null ? String(route.distanceKm.toFixed(3)) : null
+
   await db.transaction(async (tx) => {
     await tx
       .update(users)
@@ -129,26 +133,63 @@ export async function createBookingRequest(
       })
       .where(eq(customerProfiles.userId, user.id))
 
-    await tx.insert(bookings).values({
-      vehicleId: vehicle.id,
-      vendorId: row.vendorProfileId,
-      customerProfileId,
-      customerUserId: user.id,
-      vendorUserId: row.vendorUserId,
-      pickupAddress: pickup.formattedAddress,
-      dropoffAddress: dropoff.formattedAddress,
-      pickupPlaceId: pickup.placeId,
-      dropoffPlaceId: dropoff.placeId,
-      pickupAt,
-      dropoffAt,
-      driveType: parsed.data.driveType,
-      distanceKm: route != null ? String(route.distanceKm.toFixed(3)) : null,
-      status: 'PENDING',
-      note: parsed.data.note || null,
+    const [insertedBooking] = await tx
+      .insert(bookings)
+      .values({
+        vehicleId: vehicle.id,
+        vendorId: row.vendorProfileId,
+        customerProfileId,
+        customerUserId: user.id,
+        vendorUserId: row.vendorUserId,
+        pickupAddress: pickup.formattedAddress,
+        dropoffAddress: dropoff.formattedAddress,
+        pickupPlaceId: pickup.placeId,
+        dropoffPlaceId: dropoff.placeId,
+        pickupAt,
+        dropoffAt,
+        driveType: parsed.data.driveType,
+        distanceKm: distanceStr,
+        status: 'PENDING',
+        note: parsed.data.note || null,
+      })
+      .returning({ id: bookings.id })
+
+    const [thread] = await tx
+      .insert(chatThreads)
+      .values({
+        bookingId: insertedBooking.id,
+        customerUserId: user.id,
+        vendorUserId: row.vendorUserId,
+      })
+      .returning({ id: chatThreads.id })
+
+    const seedLines = [
+      'Booking request',
+      `Pickup: ${pickup.formattedAddress}`,
+      `Drop-off: ${dropoff.formattedAddress}`,
+      `From: ${pickupAt.toISOString()}`,
+      `To: ${dropoffAt.toISOString()}`,
+      `Drive: ${parsed.data.driveType}`,
+    ]
+    if (distanceStr) seedLines.push(`Distance: ${distanceStr} km`)
+    if (parsed.data.note?.trim()) seedLines.push(`Note: ${parsed.data.note.trim()}`)
+
+    const now = new Date()
+    await tx.insert(messages).values({
+      threadId: thread.id,
+      senderId: user.id,
+      content: seedLines.join('\n'),
+      createdAt: now,
     })
+
+    await tx
+      .update(chatThreads)
+      .set({ lastMessageAt: now })
+      .where(eq(chatThreads.id, thread.id))
   })
 
   updateTag(customerBookingsTag(user.id))
+  updateTag(vendorBookingsTag(row.vendorUserId))
 
   return { success: true }
 }

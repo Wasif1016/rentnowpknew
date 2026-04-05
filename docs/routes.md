@@ -33,8 +33,10 @@ Requires auth + `CUSTOMER` role (`customer/layout.tsx`).
 | URL                                    | Notes                                                                 |
 | -------------------------------------- | --------------------------------------------------------------------- |
 | `/customer`                            | Dashboard (`customer/page.tsx`)                                     |
-| `/customer/bookings`                   | Booking list with links to chat (`customer/bookings/page.tsx`)      |
-| `/customer/bookings/[bookingId]/chat`  | Booking-scoped chat thread (`customer/bookings/[bookingId]/chat/page.tsx`) |
+| `/customer/bookings`                   | Booking cards + status (`customer/bookings/page.tsx`); links open Messages |
+| `/customer/chat`                       | Messages hub: sidebar + empty state (`customer/chat/page.tsx`)        |
+| `/customer/chat/[bookingId]`           | Sidebar + chat thread (`customer/chat/[bookingId]/page.tsx`)         |
+| `/customer/bookings/[bookingId]/chat`  | Redirects to `/customer/chat/[bookingId]`                            |
 | `/customer/settings`                   | Add when built                                                        |
 
 ## Vendor — `src/app/vendor/`
@@ -44,8 +46,10 @@ Requires auth + `VENDOR` role (`vendor/layout.tsx`).
 | URL                                      | Notes                                                                 |
 | ---------------------------------------- | --------------------------------------------------------------------- |
 | `/vendor`                                | Dashboard (`vendor/page.tsx`)                                         |
-| `/vendor/bookings`                       | Booking list with links to chat (`vendor/bookings/page.tsx`)          |
-| `/vendor/bookings/[bookingId]/chat`      | Booking-scoped chat thread (`vendor/bookings/[bookingId]/chat/page.tsx`) |
+| `/vendor/bookings`                       | Booking cards; links open Messages                                    |
+| `/vendor/chat`                         | Messages hub: sidebar + empty state (`vendor/chat/page.tsx`)          |
+| `/vendor/chat/[bookingId]`             | Sidebar + chat thread (`vendor/chat/[bookingId]/page.tsx`)            |
+| `/vendor/bookings/[bookingId]/chat`      | Redirects to `/vendor/chat/[bookingId]`                               |
 | `/vendor/vehicles`                       | Fleet list                                                            |
 | `/vendor/vehicles/add`                   | Add vehicle (architecture: post-verify redirect target)               |
 

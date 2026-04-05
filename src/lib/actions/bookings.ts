@@ -18,6 +18,7 @@ import {
 import { formString } from '@/lib/form/form-data'
 import { getDrivingRouteSummary } from '@/lib/google-maps/directions-distance'
 import { getPlaceDetails } from '@/lib/google-maps/places-details'
+import { buildBookingRequestSeedContent } from '@/lib/format/booking-seed'
 import { BookingRequestSchema } from '@/lib/validation/booking-request'
 import type { ZodIssue } from 'zod'
 
@@ -163,22 +164,21 @@ export async function createBookingRequest(
       })
       .returning({ id: chatThreads.id })
 
-    const seedLines = [
-      'Booking request',
-      `Pickup: ${pickup.formattedAddress}`,
-      `Drop-off: ${dropoff.formattedAddress}`,
-      `From: ${pickupAt.toISOString()}`,
-      `To: ${dropoffAt.toISOString()}`,
-      `Drive: ${parsed.data.driveType}`,
-    ]
-    if (distanceStr) seedLines.push(`Distance: ${distanceStr} km`)
-    if (parsed.data.note?.trim()) seedLines.push(`Note: ${parsed.data.note.trim()}`)
+    const seedContent = buildBookingRequestSeedContent({
+      pickupAddress: pickup.formattedAddress,
+      dropoffAddress: dropoff.formattedAddress,
+      pickupAt,
+      dropoffAt,
+      driveType: parsed.data.driveType,
+      distanceKm: distanceStr,
+      note: parsed.data.note || null,
+    })
 
     const now = new Date()
     await tx.insert(messages).values({
       threadId: thread.id,
       senderId: user.id,
-      content: seedLines.join('\n'),
+      content: seedContent,
       createdAt: now,
     })
 

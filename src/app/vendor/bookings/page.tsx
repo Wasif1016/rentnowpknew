@@ -38,7 +38,7 @@ export default async function VendorBookingsPage() {
           {rows.map((row) => (
             <li key={row.bookingId}>
               <Link
-                href={`/vendor/bookings/${row.bookingId}/chat`}
+                href={`/vendor/chat/${row.bookingId}`}
                 className="hover:bg-muted/50 flex flex-col gap-1 px-4 py-3 transition-colors"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">

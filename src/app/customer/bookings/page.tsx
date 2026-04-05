@@ -37,7 +37,7 @@ export default async function CustomerBookingsPage() {
           {rows.map((row) => (
             <li key={row.bookingId}>
               <Link
-                href={`/customer/bookings/${row.bookingId}/chat`}
+                href={`/customer/chat/${row.bookingId}`}
                 className="hover:bg-muted/50 flex flex-col gap-1 px-4 py-3 transition-colors"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">

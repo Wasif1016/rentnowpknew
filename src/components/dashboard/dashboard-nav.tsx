@@ -4,6 +4,7 @@ import {
   Add01Icon,
   Calendar03Icon,
   Car01Icon,
+  Chat01Icon,
   DashboardSquare01Icon,
   Settings01Icon,
   User02Icon,
@@ -23,12 +24,14 @@ export const VENDOR_NAV: DashboardNavItem[] = [
   { href: "/vendor/vehicles", label: "Vehicles", icon: Car01Icon },
   { href: "/vendor/vehicles/add", label: "Add vehicle", icon: Add01Icon },
   { href: "/vendor/bookings", label: "Bookings", icon: Calendar03Icon },
+  { href: "/vendor/chat", label: "Messages", icon: Chat01Icon },
   { href: "/vendor/profile", label: "Profile", icon: User02Icon },
 ]
 
 export const CUSTOMER_NAV: DashboardNavItem[] = [
   { href: "/customer", label: "Dashboard", icon: DashboardSquare01Icon },
   { href: "/customer/bookings", label: "Bookings", icon: Calendar03Icon },
+  { href: "/customer/chat", label: "Messages", icon: Chat01Icon },
   { href: "/customer/settings", label: "Settings", icon: Settings01Icon },
 ]
 

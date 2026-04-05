@@ -7,6 +7,10 @@ import { chatThreadChannelName } from '@/lib/chat/constants'
 import { fetchChatMessages } from '@/lib/actions/chat'
 import type { ChatMessageDto, MessageCursor } from '@/lib/db/chat'
 
+export function isOptimisticMessageId(id: string): boolean {
+  return id.startsWith('temp-')
+}
+
 function parseBroadcastRecord(payload: unknown): ChatMessageDto | null {
   if (!payload || typeof payload !== 'object') return null
   const p = payload as Record<string, unknown>
@@ -81,6 +85,37 @@ export function useBookingChat(options: {
     idsRef.current = new Set(incoming.map((m) => m.id))
   }, [bookingId])
 
+  const addOptimisticMessage = useCallback((msg: ChatMessageDto) => {
+    idsRef.current.add(msg.id)
+    setMessages((prev) =>
+      [...prev, msg].sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      )
+    )
+  }, [])
+
+  const replaceOptimisticMessage = useCallback(
+    (tempId: string, real: ChatMessageDto) => {
+      idsRef.current.delete(tempId)
+      idsRef.current.add(real.id)
+      setMessages((prev) =>
+        prev
+          .map((m) => (m.id === tempId ? real : m))
+          .sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          )
+      )
+    },
+    []
+  )
+
+  const removeOptimisticMessage = useCallback((tempId: string) => {
+    idsRef.current.delete(tempId)
+    setMessages((prev) => prev.filter((m) => m.id !== tempId))
+  }, [])
+
   const loadOlder = useCallback(async () => {
     if (!nextCursor || loadingOlder) return
     setLoadingOlder(true)
@@ -134,9 +169,19 @@ export function useBookingChat(options: {
         const dto = parseBroadcastRecord(payload)
         if (!dto || dto.threadId !== threadId) return
         setMessages((prev) => {
-          if (idsRef.current.has(dto.id)) return prev
+          if (idsRef.current.has(dto.id)) {
+            return prev
+          }
+          const withoutMatchingOptimistic = prev.filter(
+            (m) =>
+              !(
+                isOptimisticMessageId(m.id) &&
+                m.senderId === dto.senderId &&
+                m.content === dto.content
+              )
+          )
           idsRef.current.add(dto.id)
-          return [...prev, dto].sort(
+          return [...withoutMatchingOptimistic, dto].sort(
             (a, b) =>
               new Date(a.createdAt).getTime() -
               new Date(b.createdAt).getTime()
@@ -166,5 +211,8 @@ export function useBookingChat(options: {
     loadingOlder,
     loadOlder,
     refetchLatest,
+    addOptimisticMessage,
+    replaceOptimisticMessage,
+    removeOptimisticMessage,
   }
 }

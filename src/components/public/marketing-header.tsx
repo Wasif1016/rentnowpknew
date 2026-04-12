@@ -33,7 +33,7 @@ export async function MarketingHeader() {
   const user = await getOptionalUser()
 
   return (
-    <header className="sticky top-0 z-40 hidden w-full border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 md:block">
+    <header className="sticky top-0 z-40 hidden w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 md:block">
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
@@ -157,7 +157,7 @@ export async function MarketingHeader() {
               <Button variant="default" className="bg-primary/10 text-primary hover:bg-primary/20  rounded-md border-none px-4 py-4 font-bold" asChild>
                 <Link href="/auth/signup">Log in as Vendor</Link>
               </Button>
-              <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-md px-6 font-bold shadow-lg shadow-primary/20" asChild>
+              <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-md px-6 py-5 font-bold shadow-lg shadow-primary/20" asChild>
                 <Link href="/auth/signup-customer">List Your Car</Link>
               </Button>
             </div>

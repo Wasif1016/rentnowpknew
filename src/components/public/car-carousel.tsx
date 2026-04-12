@@ -8,12 +8,16 @@ interface CarMake {
   logoUrl: string
 }
 
-export function CarCarousel({ makes }: { makes: CarMake[] }) {
+export function CarCarousel({ makes, variant = "default" }: { makes: CarMake[], variant?: "default" | "embedded" }) {
   // We duplicate the array to create an infinite seamless loop
-  const duplicatedMakes = [...makes, ...makes]
+  const duplicatedMakes = [...makes, ...makes, ...makes]
+
+  const containerClasses = variant === "embedded" 
+    ? "w-full overflow-hidden py-4 opacity-70"
+    : "w-full overflow-hidden bg-background/50 border-y py-8 backdrop-blur-sm"
 
   return (
-    <div className="w-full overflow-hidden bg-background/50 border-y py-8 backdrop-blur-sm">
+    <div className={containerClasses}>
       <div className="max-w-[1500px] mx-auto relative px-4">
         <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />

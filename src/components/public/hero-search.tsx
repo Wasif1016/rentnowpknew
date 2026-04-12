@@ -101,7 +101,7 @@ export function HeroSearch() {
         <div className="relative group">
           {/* Transparent Glassmorphism Search Bar */}
           <div className={cn(
-            "flex items-center gap-3 pl-6 pr-0 h-16 rounded-2xl border transition-all duration-300",
+            "flex items-center gap-3 pl-6 pr-0 h-14 rounded-2xl border transition-all duration-300",
             "bg-background/20 backdrop-blur-xl shadow-2xl shadow-primary/10",
             "border-primary/40 hover:border-primary/60",
             isOpen ? "ring-2 ring-primary/50" : ""
@@ -137,37 +137,43 @@ export function HeroSearch() {
                     handleSelectCity(query.trim())
                   }
                 }}
-                className="h-16 rounded-r-2xl rounded-l-none bg-primary hover:bg-primary/90 font-bold text-xl shadow-lg shadow-primary/20 px-14"
+                className="h-14 rounded-r-2xl rounded-l-none bg-primary hover:bg-primary/90 font-bold text-xl shadow-lg shadow-primary/20 px-14"
               >
                 Search
               </Button>
             </div>
           </div>
 
-          {/* Beautiful Custom Dropdown */}
+          {/* Beautiful Custom Dropdown - Matching Screenshot Style */}
           <AnimatePresence>
             {isOpen && (
               <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                className="absolute top-full left-0 right-0 mt-3 p-2 bg-background/80 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-3xl z-50 overflow-hidden"
+                className="absolute top-full left-0 right-0 mt-3 p-1 bg-white border border-neutral-200 rounded-2xl shadow-2xl z-50 overflow-hidden"
               >
-                <CommandList className="max-h-[350px] overflow-y-auto scrollbar-hide py-2">
-                  <CommandEmpty className="px-5 py-8 text-center text-muted-foreground text-sm">
+                <CommandList className="max-h-[350px] overflow-y-auto pt-1 pb-2">
+                  <CommandEmpty className="px-6 py-10 text-center text-muted-foreground text-sm">
                     No cities found matching "{query}"
                   </CommandEmpty>
                   {filteredCities.length > 0 && (
-                    <div className="grid grid-cols-2 gap-1 px-1">
+                    <div className="flex flex-col gap-0.5">
                       {filteredCities.map((city) => (
                         <CommandItem
                           key={city}
                           value={city}
                           onSelect={() => handleSelectCity(city)}
-                          className="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all text-left group data-[selected=true]:bg-primary/5 data-[selected=true]:text-primary"
+                          className="flex items-center gap-4 px-5 py-3.5 cursor-pointer transition-all text-left group data-[selected=true]:bg-neutral-100"
                         >
-                          <div className="h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary group-data-[selected=true]:bg-primary transition-colors" />
-                          <span className="text-sm font-semibold">{city}</span>
+                          <Icon 
+                            icon={Search01Icon} 
+                            size={18} 
+                            className="text-neutral-400 transition-colors group-hover:text-black group-data-[selected=true]:text-black" 
+                          />
+                          <span className="text-[15px] font-medium text-neutral-800 group-data-[selected=true]:text-black">
+                            {city}
+                          </span>
                         </CommandItem>
                       ))}
                     </div>
@@ -180,20 +186,20 @@ export function HeroSearch() {
       </Command>
 
       {/* Geolocation Hook Under Search */}
-      <div className="mt-4 flex justify-start pl-4">
+      <div className="mt-2 flex justify-start pl-4">
         <Button
           variant="ghost"
           size="sm"
           disabled={isDetecting}
           onClick={handleUseCurrentLocation}
-          className="rounded-full px-6 gap-2 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+          className="rounded-full px-8 gap-2 text-muted-foreground"
         >
           <Icon
             icon={isDetecting ? CheckmarkCircle02Icon : Navigation03Icon}
             size={18}
             className={cn(isDetecting ? "animate-pulse" : "")}
           />
-          <span className="text-xs font-bold tracking-tight">
+          <span className="text-md  font-bold tracking-tight">
             {isDetecting ? "Detecting city..." : "Use Current Location"}
           </span>
         </Button>

@@ -154,10 +154,10 @@ export async function MarketingHeader() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="default" className="bg-primary/10 text-primary hover:bg-primary/20 rounded-full border-none px-6 font-bold" asChild>
+              <Button variant="default" className="bg-primary/10 text-primary hover:bg-primary/20  rounded-md border-none px-4 py-4 font-bold" asChild>
                 <Link href="/auth/signup">Log in as Vendor</Link>
               </Button>
-              <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-full px-6 font-bold shadow-lg shadow-primary/20" asChild>
+              <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-md px-6 font-bold shadow-lg shadow-primary/20" asChild>
                 <Link href="/auth/signup-customer">List Your Car</Link>
               </Button>
             </div>

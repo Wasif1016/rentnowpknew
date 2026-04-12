@@ -185,6 +185,18 @@ export const vendorProfiles = pgTable(
 );
 
 // ============================================================
+// CAR MAKES (For Carousel & Categorization)
+// ============================================================
+
+export const carMakes = pgTable("car_makes", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  logoUrl: text("logo_url"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ============================================================
 // VEHICLES
 // ============================================================
 

@@ -13,6 +13,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 
+import Link from "next/link"
+
 interface VehicleData {
   id: string
   name: string
@@ -23,6 +25,7 @@ interface VehicleData {
   priceDay: string | null
   priceMonth: string | null
   pickupAddress: string | null
+  vendorSlug: string | null
   vendorLogo: string | null
   vendorPhone: string | null
   vendorWhatsapp: string | null
@@ -31,23 +34,37 @@ interface VehicleData {
   vendorTotalReviews: number | null
 }
 
-export function FeaturedListings({ listings }: { listings: VehicleData[] }) {
+interface FeaturedListingsProps {
+  listings: VehicleData[]
+  title?: string
+  description?: string
+  hideSeeMore?: boolean
+}
+
+export function FeaturedListings({ 
+  listings, 
+  title = "Featured Vehicles", 
+  description = "Enjoy budget-friendly car rentals with seasonal discounts from some of the best car rental companies.",
+  hideSeeMore = false
+}: FeaturedListingsProps) {
   if (!listings || listings.length === 0) return null;
 
   return (
-    <section className="w-full max-w-[1300px] mx-auto px-4 py-16">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b border-border/50 pb-4 border-dashed">
+    <section className="w-full pb-16">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b border-border/50 pb-6 border-dashed">
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-bold tracking-tight">Featured Vehicles</h2>
-          <p className="text-muted-foreground">
-            Enjoy budget-friendly car rentals with seasonal discounts from some of the best car rental companies.
+          <h2 className="text-[24px] md:text-[30px] font-black tracking-tight text-slate-900">{title}</h2>
+          <p className="text-[14px] font-light text-slate-400">
+            {description}
           </p>
         </div>
-        <Button 
-          className="bg-orange-600 hover:bg-orange-700 text-white shrink-0 font-semibold shadow-md shadow-orange-600/20 px-6 rounded-xl h-10 w-full md:w-auto"
-        >
-          See More Cars
-        </Button>
+        {!hideSeeMore && (
+          <Button 
+            className="bg-orange-600 hover:bg-orange-700 text-white shrink-0 font-semibold shadow-md shadow-orange-600/20 px-6 rounded-xl h-10 w-full md:w-auto"
+          >
+            See More Cars
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -59,8 +76,8 @@ export function FeaturedListings({ listings }: { listings: VehicleData[] }) {
             transition={{ delay: idx * 0.1 }}
             className="group flex flex-col bg-background rounded-2xl border border-border hover:border-black transition-all duration-300 overflow-hidden"
           >
-            {/* Image Container */}
-            <div className="relative aspect-[308/210] overflow-hidden bg-muted">
+            {/* Image Container - Linked */}
+            <Link href={`/car/${car.vendorSlug}/${car.slug}`} className="relative aspect-[308/210] overflow-hidden bg-muted">
               {car.coverImage ? (
                 <img 
                   src={car.coverImage} 
@@ -73,18 +90,20 @@ export function FeaturedListings({ listings }: { listings: VehicleData[] }) {
                 </div>
               )}
               
-              <button className="absolute top-3 right-3 bg-background/90 backdrop-blur pb-px w-8 h-8 rounded-full flex items-center justify-center hover:bg-white text-muted-foreground hover:text-red-500 shadow-sm transition-colors z-10">
+              <button className="absolute top-3 right-3 bg-background/90 backdrop-blur pb-px w-8 h-8 rounded-full flex items-center justify-center hover:bg-white text-muted-foreground hover:text-red-500 shadow-sm transition-colors z-50 pointer-events-auto">
                 <Icon icon={FavouriteIcon} size={16} />
               </button>
-            </div>
+            </Link>
 
             {/* Content */}
             <div className="p-4 flex flex-col flex-1">
-              {/* Title, Rating & Location */}
+              {/* Title, Rating & Location - Linked Title */}
               <div className="mb-4">
-                <h3 className="text-[18px] font-semibold text-secondary-foreground leading-tight line-clamp-1 mb-1">
-                  {car.make} {car.name} {car.year}
-                </h3>
+                <Link href={`/car/${car.vendorSlug}/${car.slug}`}>
+                  <h3 className="text-[18px] font-semibold text-secondary-foreground leading-tight line-clamp-1 mb-1 hover:text-primary transition-colors">
+                    {car.make} {car.name} {car.year}
+                  </h3>
+                </Link>
                 <div className="flex flex-col gap-1.5 mt-2">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <div className="flex items-center text-amber-500">
@@ -109,7 +128,6 @@ export function FeaturedListings({ listings }: { listings: VehicleData[] }) {
 
               {/* Pricing Grid */}
               <div className="mb-4 mt-auto">
-                {/* Per Day Only */}
                 <div className="flex flex-col">
                   <div className="flex items-baseline gap-1">
                     <span className="text-lg font-bold text-orange-600">

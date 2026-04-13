@@ -3,9 +3,9 @@
 import * as React from "react"
 import Link from "next/link"
 import { Icon } from "@/components/ui/icon"
-import { 
-  InstagramIcon, 
-  FacebookIcon, 
+import {
+  InstagramIcon,
+  FacebookIcon,
   TwitterIcon,
   Linkedin02Icon,
   Mail01Icon,
@@ -35,7 +35,7 @@ const footerLinks = [
     ]
   },
   {
-    title: "For Partners",
+    title: "For Dealers",
     links: [
       { name: "List Your Car", href: "/auth/signup" },
       { name: "Vendor Handbook", href: "/blog/vendor-guide" },
@@ -97,12 +97,12 @@ export function Footer() {
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6 text-muted-foreground text-xs">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-1.5">
-               <Icon icon={Call02Icon} size={14} />
-               <span>+92 300 1234567</span>
+              <Icon icon={Call02Icon} size={14} />
+              <span>+92 300 1234567</span>
             </div>
             <div className="flex items-center gap-1.5">
-               <Icon icon={Mail01Icon} size={14} />
-               <span>help@rentnowpk.com</span>
+              <Icon icon={Mail01Icon} size={14} />
+              <span>help@rentnowpk.com</span>
             </div>
           </div>
           <p>© {new Date().getFullYear()} RentNowPk (Pvt) Ltd. All Rights Reserved.</p>

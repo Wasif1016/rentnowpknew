@@ -6,7 +6,7 @@ export async function MarketingFooter() {
   const user = await getOptionalUser()
 
   return (
-    <footer className="border-border mt-auto border-t bg-muted/30">
+    <footer id="marketing-footer" className="border-border mt-auto border-t bg-muted/30">
       <div className="container mx-auto max-w-6xl px-4 py-10">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <div>

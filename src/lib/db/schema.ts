@@ -17,6 +17,7 @@ import {
   timestamp,
   index,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -153,11 +154,17 @@ export const vendorProfiles = pgTable(
     cnicBackUrl: text("cnic_back_url"),
     selfieUrl: text("selfie_url"),
     businessLogoUrl: text("business_logo_url"),
+    businessBannerUrl: text("business_banner_url"), // Specifically for background
+    locationAddress: text("location_address"),
+    city: text("city"),
+    dealerNote: text("dealer_note"),
+    deliveryLocations: jsonb("delivery_locations"), // Array of strings
 
     /** Set when vendor completes the verification wizard; null means not yet submitted. */
     verificationSubmittedAt: timestamp("verification_submitted_at", {
       withTimezone: true,
     }),
+    // ... verificationStatus, statusNote, avgRating, totalReviews, createdAt, updatedAt
 
     verificationStatus: vendorVerificationEnum("verification_status")
       .notNull()
@@ -252,6 +259,23 @@ export const vehicles = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+
+    // New detailed spec fields
+    transmission: text("transmission"), // Auto, Manual
+    fuelType: text("fuel_type"), // Petrol, Diesel, Electric, Hybrid
+    engineCapacity: text("engine_capacity"), // e.g., "3.0L"
+    seatingCapacity: integer("seating_capacity"),
+    luggageCapacity: integer("luggage_capacity"),
+    doors: integer("doors"),
+    exteriorColor: text("exterior_color"),
+    interiorColor: text("interior_color"),
+    bodyType: text("body_type"), // SUV, Luxury, Sedan, etc.
+
+    // JSON arrays/objects for flexible structured data
+    features: jsonb("features"), // { interior: [], exterior: [], safety: [] }
+    rentalTerms: jsonb("rental_terms"), // { mileage_limit, extra_km_price, deposit, etc }
+    faqs: jsonb("faqs"), // Array of { q, a }
+    description: text("description"),
   },
   (t) => ({
     vendorSlugUnique: uniqueIndex("vehicles_vendor_slug_unique").on(
@@ -845,3 +869,16 @@ export const incidentsRelations = relations(incidents, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const listingReports = pgTable(
+  "listing_reports",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    vehicleId: uuid("vehicle_id").notNull().references(() => vehicles.id),
+    userId: uuid("user_id").references(() => users.id),
+    reason: text("reason").notNull(),
+    details: text("details"),
+    status: text("status").notNull().default("PENDING"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  }
+);
